@@ -2,24 +2,40 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.XR.Interaction.Toolkit;
 
 public class XRButtonInteractable : XRBaseInteractable
 {
     public XRButton XRButton;
 
+    private XRBaseInteractor _currHoverInteractor;
+
     public override void ProcessInteractable(XRInteractionUpdateOrder.UpdatePhase updatePhase)
-    {
+    { 
         base.ProcessInteractable(updatePhase);
 
-        if (updatePhase == XRInteractionUpdateOrder.UpdatePhase.Dynamic)
-        {
+        if (_currHoverInteractor != null && updatePhase == XRInteractionUpdateOrder.UpdatePhase.Dynamic)
             UpdateButtonPress();
-        }
     }
 
+    protected override void OnHoverEntered(HoverEnterEventArgs args)
+    {
+        base.OnHoverEntered(args);
+        _currHoverInteractor = args.interactor;
+    }
+
+    protected override void OnHoverExited(HoverExitEventArgs args)
+    {
+        base.OnHoverExited(args);
+        _currHoverInteractor = null;
+    }
+
+
+    // if we have an action-based controller, try to read Activate action to interact with XRButton 
     private void UpdateButtonPress()
     {
+
         if (IsControllerActionBased(out ActionBasedController controller))
         {
 
@@ -30,9 +46,8 @@ public class XRButtonInteractable : XRBaseInteractable
             } catch (Exception e)
             {
                 throw new Exception(
-                    "Interacting controller doesn't have an Activate action configured as an value / axis: " + e.Message);
+                    string.Format("Failed to read value of Activate action on {0}: {1}", controller.name, e.Message));
             }
-
 
             XRButton.SetButtonPressed(activateValue);
         }
@@ -42,12 +57,13 @@ public class XRButtonInteractable : XRBaseInteractable
     {
         controller = null;
 
-        if (selectingInteractor is XRBaseControllerInteractor interactor)
+        if (_currHoverInteractor is XRBaseControllerInteractor interactor)
         {
             if (interactor.xrController is ActionBasedController actionController)
                 controller = actionController;
         }
 
-        return false;
+        return controller != null;
     }
+
 }

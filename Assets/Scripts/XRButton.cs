@@ -5,7 +5,7 @@ using UnityEngine.Events;
 using UnityEngine.InputSystem;
 using UnityEngine.XR.Interaction.Toolkit;
 
-public class XRButton : XRBaseInteractable
+public class XRButton : MonoBehaviour
 {
     [SerializeField]
     public XRButtonEvent OnDown;
@@ -13,13 +13,12 @@ public class XRButton : XRBaseInteractable
     public XRButtonEvent OnUp;
 
     [Header("Component Dependencies")]
-    public Transform Switch;
+    public Transform Button;
     public SpringJoint SpringJoint;
     public Renderer ProgressRenderer;
     public AudioSource DownSound;
     public AudioSource UpSound;
-    [Tooltip("Axis by which button can be pressed when hovered")]
-    public InputActionReference PressAxis;
+
 
     [Header("Buttom Parameters")]
     [Range(1f, 25f)]
@@ -49,11 +48,11 @@ public class XRButton : XRBaseInteractable
     // Start is called before the first frame update
     void Start()
     {
-        _initSwitchLocalY = Switch.localPosition.y;
+        _initSwitchLocalY = Button.localPosition.y;
         _initSpringPower = SpringJoint.spring;
-        _switchRbody = Switch.GetComponent<Rigidbody>();
+        _switchRbody = Button.GetComponent<Rigidbody>();
         ProgressRenderer.sharedMaterial.SetColor("_Color", ProgressRadialColor);
-        _collider = Switch.GetComponent<MeshCollider>();
+        _collider = Button.GetComponent<MeshCollider>();
     }
 
     // Update is called once per frame
@@ -61,15 +60,10 @@ public class XRButton : XRBaseInteractable
     {
         var activationHeight = _initSwitchLocalY - InchesToScaledMeters(ThrowDepth);
 
-        if (isHovered && _bttnReset && !_activated)
-            ReceiveTriggerInput();
-
-        // update progress shader
-        var progress = Mathf.Abs(_initSwitchLocalY - Switch.localPosition.y) / InchesToScaledMeters(ThrowDepth) /** Switch.lossyScale.y*/;
-        ProgressRenderer.sharedMaterial.SetFloat("_Cutoff", progress);
+        UpdateProgressRadial();
 
         // button reached activation depth
-        if (!_activated && _bttnReset && Switch.localPosition.y <= activationHeight)
+        if (!_activated && _bttnReset && Button.localPosition.y <= activationHeight)
             Activate();
 
         // activation duration elapsed
@@ -77,32 +71,30 @@ public class XRButton : XRBaseInteractable
             Inactivate();
     }
 
-
-
     private void FixedUpdate()
     {
         // button has reached top of throw, force it to stop
-        if (Switch.localPosition.y >= _initSwitchLocalY)
-        {
-            _switchRbody.velocity = Vector3.zero;
-            SpringJoint.spring = 0;
-            Switch.localPosition = 
-                new Vector3(Switch.localPosition.x, _initSwitchLocalY, Switch.localPosition.z);
-
-            if (!_bttnReset)
-            {
-                print("Button Reset");
-                _bttnReset = true;
-                _collider.enabled = true;
-            }
-
-        }
-        // reset spring if we disabled it
+        if (Button.localPosition.y >= _initSwitchLocalY)
+            StopAndResetButton();
+        // restore spring strength if it was disabled
         else if (SpringJoint.spring != _initSpringPower)
-        {
             SpringJoint.spring = _initSpringPower;
-        }
+    }
 
+    // force rigidbody to stop moving at top
+    private void StopAndResetButton()
+    {
+        _switchRbody.velocity = Vector3.zero;
+        SpringJoint.spring = 0;
+        Button.localPosition =
+            new Vector3(Button.localPosition.x, _initSwitchLocalY, Button.localPosition.z);
+
+        if (!_bttnReset)
+        {
+            print("Button Reset");
+            _bttnReset = true;
+            _collider.enabled = true;
+        }
     }
 
     private void Activate()
@@ -117,18 +109,17 @@ public class XRButton : XRBaseInteractable
         _bttnReset = false;
         _collider.enabled = false;
 
-        Switch.GetComponent<MeshRenderer>().material = ActiveMaterial;
+        Button.GetComponent<MeshRenderer>().material = ActiveMaterial;
 
         // freeze button and ensure it's no deeper than it should be
         _switchRbody.constraints = RigidbodyConstraints.FreezeAll;
-        Switch.localPosition = new Vector3(Switch.localPosition.x,
+        Button.localPosition = new Vector3(Button.localPosition.x,
             _initSwitchLocalY - InchesToScaledMeters(ThrowDepth),
-            Switch.localPosition.z);
+            Button.localPosition.z);
 
         // if duration > zero
         _activationTime = Time.time;
     }
-
 
     private void Inactivate()
     {
@@ -140,32 +131,51 @@ public class XRButton : XRBaseInteractable
 
         _activated = false;
 
-        Switch.GetComponent<MeshRenderer>().material = InactiveMaterial;
+        Button.GetComponent<MeshRenderer>().material = InactiveMaterial;
 
         // allow button to physically reset
         _switchRbody.constraints =
             RigidbodyConstraints.FreezePositionX | RigidbodyConstraints.FreezeRotationX |
             RigidbodyConstraints.FreezeRotation |
             RigidbodyConstraints.FreezePositionZ | RigidbodyConstraints.FreezeRotationZ;
-
     }
 
-    private void ReceiveTriggerInput()
+    // update shader _cutoff property to visualize press amount
+    private void UpdateProgressRadial()
     {
-        var axisValue = PressAxis.action.ReadValue<float>();
+        // if the button is no longer active, but it hasn't returned to the top position, set radial to zero progress
+        if (!_activated && !_bttnReset)
+        {
+            ProgressRenderer.sharedMaterial.SetFloat("_Cutoff", 0f);
+            return;
+        }
 
-        if (axisValue <= 0)
+        var progress = Mathf.Abs(_initSwitchLocalY - Button.localPosition.y) / InchesToScaledMeters(ThrowDepth) /** Switch.lossyScale.y*/;
+
+        progress = (float)System.Math.Round(progress, 2);
+
+        ProgressRenderer.sharedMaterial.SetFloat("_Cutoff", progress);
+    }
+
+    /// <summary>
+    /// Change the button's physical state. Button will activate if fully pressed.
+    /// If button is already activated, press amount won't be set.
+    /// </summary>
+    /// <param name="pressedAmount">Clamped to 1-0. 1 = fully pressed (activated), 0 = not pressed </param>
+    public void SetButtonPressed(float pressedAmount) {
+
+        if (_activated)
             return;
 
-        print(axisValue);
+        pressedAmount = Mathf.Clamp(pressedAmount, 0, 1);
 
-        var distanceFromTop = axisValue * InchesToScaledMeters(ThrowDepth);
+        var pressedDistance = pressedAmount * InchesToScaledMeters(ThrowDepth);
 
-        Switch.localPosition = new Vector3(Switch.localPosition.x, _initSwitchLocalY - distanceFromTop, Switch.localPosition.z);
+        Button.localPosition = new Vector3(Button.localPosition.x, _initSwitchLocalY - pressedDistance, Button.localPosition.z);
     }
 
     public float InchesToScaledMeters(float inches)
     {
-        return inches / 39.3701f * Switch.lossyScale.y;
+        return inches / 39.3701f * Button.lossyScale.y;
     }
 }
