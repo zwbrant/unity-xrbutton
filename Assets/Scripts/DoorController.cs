@@ -32,7 +32,6 @@ public class DoorController : MonoBehaviour
     {
         if (_raised)
             StartCoroutine(LowerRoutine());
-
     }
 
     private IEnumerator RaiseRoutine()
@@ -44,6 +43,8 @@ public class DoorController : MonoBehaviour
             var newPos = Vector3.Lerp(_initPosition, _initPosition + Vector3.up * 2.2f, lerpRatio);
 
             transform.position = newPos;
+
+            print(newPos.y);
 
             _timer += Time.deltaTime;
 

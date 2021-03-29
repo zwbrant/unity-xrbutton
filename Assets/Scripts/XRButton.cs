@@ -21,8 +21,8 @@ public class XRButton : MonoBehaviour
 
 
     [Header("Buttom Parameters")]
-    [Range(1f, 25f)]
-    public float ThrowDepth = 15f;
+    [Range(1f, 5f)]
+    public float ThrowDepth = 1f;
     [Range(0f, 100f)]
     public float ActivationDuration = 1f;
 
@@ -39,18 +39,18 @@ public class XRButton : MonoBehaviour
     private bool _bttnReset = true;
     private float _activationTime = -1f;
 
-    private Rigidbody _switchRbody;
+    private Rigidbody _buttonRbody;
     private MeshCollider _collider;
-    private float _initSwitchLocalY;
+    private float _initButtonLocalY;
     private float _initSpringPower;
 
 
     // Start is called before the first frame update
     void Start()
     {
-        _initSwitchLocalY = Button.localPosition.y;
+        _initButtonLocalY = Button.localPosition.y;
         _initSpringPower = SpringJoint.spring;
-        _switchRbody = Button.GetComponent<Rigidbody>();
+        _buttonRbody = Button.GetComponent<Rigidbody>();
         ProgressRenderer.sharedMaterial.SetColor("_Color", ProgressRadialColor);
         _collider = Button.GetComponent<MeshCollider>();
     }
@@ -58,7 +58,7 @@ public class XRButton : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        var activationHeight = _initSwitchLocalY - InchesToScaledMeters(ThrowDepth);
+        var activationHeight = _initButtonLocalY - InchesToScaledMeters(ThrowDepth);
 
         UpdateProgressRadial();
 
@@ -74,7 +74,7 @@ public class XRButton : MonoBehaviour
     private void FixedUpdate()
     {
         // button has reached top of throw, force it to stop
-        if (Button.localPosition.y >= _initSwitchLocalY)
+        if (Button.localPosition.y >= _initButtonLocalY)
             StopAndResetButton();
         // restore spring strength if it was disabled
         else if (SpringJoint.spring != _initSpringPower)
@@ -84,14 +84,14 @@ public class XRButton : MonoBehaviour
     // force rigidbody to stop moving at top
     private void StopAndResetButton()
     {
-        _switchRbody.velocity = Vector3.zero;
+        _buttonRbody.velocity = Vector3.zero;
         SpringJoint.spring = 0;
         Button.localPosition =
-            new Vector3(Button.localPosition.x, _initSwitchLocalY, Button.localPosition.z);
+            new Vector3(Button.localPosition.x, _initButtonLocalY, Button.localPosition.z);
 
         if (!_bttnReset)
         {
-            print("Button Reset");
+            //print("Button Reset");
             _bttnReset = true;
             _collider.enabled = true;
         }
@@ -99,9 +99,10 @@ public class XRButton : MonoBehaviour
 
     private void Activate()
     {
-        print("Button Activated");
+        //print("Button Activated");
 
-        OnDown.Invoke();
+        if (OnDown != null)
+            OnDown.Invoke();
         if (DownSound != null)
             DownSound.Play();
 
@@ -112,20 +113,22 @@ public class XRButton : MonoBehaviour
         Button.GetComponent<MeshRenderer>().material = ActiveMaterial;
 
         // freeze button and ensure it's no deeper than it should be
-        _switchRbody.constraints = RigidbodyConstraints.FreezeAll;
+        _buttonRbody.constraints = RigidbodyConstraints.FreezeAll;
         Button.localPosition = new Vector3(Button.localPosition.x,
-            _initSwitchLocalY - InchesToScaledMeters(ThrowDepth),
+            _initButtonLocalY - InchesToScaledMeters(ThrowDepth),
             Button.localPosition.z);
 
         // if duration > zero
         _activationTime = Time.time;
+
     }
 
     private void Inactivate()
     {
-        print("Button Inactivated");
+        //print("Button Inactivated");
 
-        OnUp.Invoke();
+        if (OnUp != null)
+            OnUp.Invoke();
         if (UpSound != null)
             UpSound.Play();
 
@@ -134,7 +137,7 @@ public class XRButton : MonoBehaviour
         Button.GetComponent<MeshRenderer>().material = InactiveMaterial;
 
         // allow button to physically reset
-        _switchRbody.constraints =
+        _buttonRbody.constraints =
             RigidbodyConstraints.FreezePositionX | RigidbodyConstraints.FreezeRotationX |
             RigidbodyConstraints.FreezeRotation |
             RigidbodyConstraints.FreezePositionZ | RigidbodyConstraints.FreezeRotationZ;
@@ -150,7 +153,7 @@ public class XRButton : MonoBehaviour
             return;
         }
 
-        var progress = Mathf.Abs(_initSwitchLocalY - Button.localPosition.y) / InchesToScaledMeters(ThrowDepth) /** Switch.lossyScale.y*/;
+        var progress = Mathf.Abs(_initButtonLocalY - Button.localPosition.y) / InchesToScaledMeters(ThrowDepth) /** Switch.lossyScale.y*/;
 
         progress = (float)System.Math.Round(progress, 2);
 
@@ -171,11 +174,11 @@ public class XRButton : MonoBehaviour
 
         var pressedDistance = pressedAmount * InchesToScaledMeters(ThrowDepth);
 
-        Button.localPosition = new Vector3(Button.localPosition.x, _initSwitchLocalY - pressedDistance, Button.localPosition.z);
+        Button.localPosition = new Vector3(Button.localPosition.x, _initButtonLocalY - pressedDistance, Button.localPosition.z);
     }
 
     public float InchesToScaledMeters(float inches)
     {
-        return inches / 39.3701f * Button.lossyScale.y;
+        return inches / 39.3701f;
     }
 }
