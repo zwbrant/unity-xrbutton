@@ -5,9 +5,9 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.XR.Interaction.Toolkit;
 
-public class XRButtonInteractable : XRBaseInteractable
+public class PushButtonInteractable : XRBaseInteractable
 {
-    public XRButton XRButton;
+    public PushButton PushButton;
 
     private XRBaseInteractor _currHoverInteractor;
 
@@ -49,7 +49,7 @@ public class XRButtonInteractable : XRBaseInteractable
                     string.Format("Failed to read value of Activate action on {0}: {1}", controller.name, e.Message));
             }
 
-            XRButton.SetButtonPressed(activateValue);
+            PushButton.SetButtonPressed(activateValue);
         }
     }
 

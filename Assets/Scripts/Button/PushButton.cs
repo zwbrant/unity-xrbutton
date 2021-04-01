@@ -1,24 +1,13 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Events;
-using UnityEngine.InputSystem;
-using UnityEngine.XR.Interaction.Toolkit;
 
-public class XRButton : MonoBehaviour
+public class PushButton : XRButton
 {
-    [SerializeField]
-    public XRButtonEvent OnDown;
-    [SerializeField]
-    public XRButtonEvent OnUp;
-
     [Header("Component Dependencies")]
     public Transform Button;
     public SpringJoint SpringJoint;
     public Renderer ProgressRenderer;
-    public AudioSource DownSound;
-    public AudioSource UpSound;
-
 
     [Header("Buttom Parameters")]
     [Range(1f, 5f)]
@@ -30,24 +19,20 @@ public class XRButton : MonoBehaviour
     public Material ActiveMaterial;
     public Material InactiveMaterial;
 
-    public bool IsDown
-    {
-        get => _activated;
-    }
+    public override bool IsDown { get => _isDown; }
 
-    private bool _activated = false;
+    private bool _isDown = false;
     private bool _bttnReset = true;
-    private float _activationTime = -1f;
+    private float _timeDown = -1f;
 
     private Rigidbody _buttonRbody;
     private MeshCollider _collider;
     private float _initButtonLocalY;
     private float _initSpringPower;
 
-
-    // Start is called before the first frame update
     void Start()
     {
+        // initialize references 
         _initButtonLocalY = Button.localPosition.y;
         _initSpringPower = SpringJoint.spring;
         _buttonRbody = Button.GetComponent<Rigidbody>();
@@ -55,23 +40,34 @@ public class XRButton : MonoBehaviour
         _collider = Button.GetComponent<MeshCollider>();
     }
 
-    // Update is called once per frame
     void Update()
     {
-        var activationHeight = _initButtonLocalY - InchesToScaledMeters(ThrowDepth);
+        if (Button.localPosition.y == _initButtonLocalY)
+            return;
 
+        CheckIfDown();
         UpdateProgressRadial();
-
-        // button reached activation depth
-        if (!_activated && _bttnReset && Button.localPosition.y <= activationHeight)
-            Activate();
-
-        // activation duration elapsed
-        if (_activated && Time.time >= _activationTime + ActivationDuration)
-            Inactivate();
     }
 
     private void FixedUpdate()
+    {
+        StopAtTopOfThrow();
+    }
+
+    private void CheckIfDown()
+    {
+        var downPosition = _initButtonLocalY - ThrowDepth.InchesToMeters();
+
+        // button reached activation depth
+        if (!_isDown && _bttnReset && Button.localPosition.y <= downPosition)
+            ButtonDown();
+
+        // activation duration elapsed
+        if (_isDown && Time.time >= _timeDown + ActivationDuration)
+            ButtonUp();
+    }
+
+    private void StopAtTopOfThrow()
     {
         // button has reached top of throw, force it to stop
         if (Button.localPosition.y >= _initButtonLocalY)
@@ -97,16 +93,11 @@ public class XRButton : MonoBehaviour
         }
     }
 
-    private void Activate()
+    protected override void ButtonDown()
     {
-        //print("Button Activated");
+        base.ButtonDown();
 
-        if (OnDown != null)
-            OnDown.Invoke();
-        if (DownSound != null)
-            DownSound.Play();
-
-        _activated = true;
+        _isDown = true;
         _bttnReset = false;
         _collider.enabled = false;
 
@@ -115,24 +106,18 @@ public class XRButton : MonoBehaviour
         // freeze button and ensure it's no deeper than it should be
         _buttonRbody.constraints = RigidbodyConstraints.FreezeAll;
         Button.localPosition = new Vector3(Button.localPosition.x,
-            _initButtonLocalY - InchesToScaledMeters(ThrowDepth),
+            _initButtonLocalY - ThrowDepth.InchesToMeters(),
             Button.localPosition.z);
 
         // if duration > zero
-        _activationTime = Time.time;
-
+        _timeDown = Time.time;
     }
 
-    private void Inactivate()
+    protected override void ButtonUp()
     {
-        //print("Button Inactivated");
+        base.ButtonUp();
 
-        if (OnUp != null)
-            OnUp.Invoke();
-        if (UpSound != null)
-            UpSound.Play();
-
-        _activated = false;
+        _isDown = false;
 
         Button.GetComponent<MeshRenderer>().material = InactiveMaterial;
 
@@ -147,13 +132,13 @@ public class XRButton : MonoBehaviour
     private void UpdateProgressRadial()
     {
         // if the button is no longer active, but it hasn't returned to the top position, set radial to zero progress
-        if (!_activated && !_bttnReset)
+        if (!_isDown && !_bttnReset)
         {
             ProgressRenderer.sharedMaterial.SetFloat("_Cutoff", 0f);
             return;
         }
 
-        var progress = Mathf.Abs(_initButtonLocalY - Button.localPosition.y) / InchesToScaledMeters(ThrowDepth) /** Switch.lossyScale.y*/;
+        var progress = Mathf.Abs(_initButtonLocalY - Button.localPosition.y) / ThrowDepth.InchesToMeters();
 
         progress = (float)System.Math.Round(progress, 2);
 
@@ -161,24 +146,19 @@ public class XRButton : MonoBehaviour
     }
 
     /// <summary>
-    /// Change the button's physical state. Button will activate if fully pressed.
-    /// If button is already activated, press amount won't be set.
+    /// Change the button's physical state. Button is "down" if press amount reaches 1.
+    /// If button is already is down and hasn't reset, press amount won't be set.
     /// </summary>
     /// <param name="pressedAmount">Clamped to 1-0. 1 = fully pressed (activated), 0 = not pressed </param>
-    public void SetButtonPressed(float pressedAmount) {
-
-        if (_activated)
+    public void SetButtonPressed(float pressedAmount)
+    {
+        if (_isDown)
             return;
 
         pressedAmount = Mathf.Clamp(pressedAmount, 0, 1);
 
-        var pressedDistance = pressedAmount * InchesToScaledMeters(ThrowDepth);
+        var pressedDistance = pressedAmount * ThrowDepth.InchesToMeters();
 
         Button.localPosition = new Vector3(Button.localPosition.x, _initButtonLocalY - pressedDistance, Button.localPosition.z);
-    }
-
-    public float InchesToScaledMeters(float inches)
-    {
-        return inches / 39.3701f;
     }
 }

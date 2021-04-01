@@ -44,8 +44,6 @@ public class DoorController : MonoBehaviour
 
             transform.position = newPos;
 
-            print(newPos.y);
-
             _timer += Time.deltaTime;
 
             yield return new WaitForEndOfFrame();

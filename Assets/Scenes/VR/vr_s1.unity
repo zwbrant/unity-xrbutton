@@ -3003,63 +3003,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 215299289149619860, guid: c157a5b9395ff92428e326ad0c510722, type: 3}
       propertyPath: m_Name
-      value: XR Button
-      objectReference: {fileID: 0}
-    - target: {fileID: 215299289149619862, guid: c157a5b9395ff92428e326ad0c510722, type: 3}
-      propertyPath: OnUp.m_PersistentCalls.m_Calls.Array.size
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 215299289149619862, guid: c157a5b9395ff92428e326ad0c510722, type: 3}
-      propertyPath: OnDown.m_PersistentCalls.m_Calls.Array.size
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 215299289149619862, guid: c157a5b9395ff92428e326ad0c510722, type: 3}
-      propertyPath: OnUp.m_PersistentCalls.m_Calls.Array.data[0].m_Mode
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 215299289149619862, guid: c157a5b9395ff92428e326ad0c510722, type: 3}
-      propertyPath: OnDown.m_PersistentCalls.m_Calls.Array.data[0].m_Mode
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 215299289149619862, guid: c157a5b9395ff92428e326ad0c510722, type: 3}
-      propertyPath: OnUp.m_PersistentCalls.m_Calls.Array.data[0].m_Target
-      value: 
-      objectReference: {fileID: 986042458}
-    - target: {fileID: 215299289149619862, guid: c157a5b9395ff92428e326ad0c510722, type: 3}
-      propertyPath: OnDown.m_PersistentCalls.m_Calls.Array.data[0].m_Target
-      value: 
-      objectReference: {fileID: 986042458}
-    - target: {fileID: 215299289149619862, guid: c157a5b9395ff92428e326ad0c510722, type: 3}
-      propertyPath: OnUp.m_PersistentCalls.m_Calls.Array.data[0].m_CallState
-      value: 2
-      objectReference: {fileID: 0}
-    - target: {fileID: 215299289149619862, guid: c157a5b9395ff92428e326ad0c510722, type: 3}
-      propertyPath: OnUp.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
-      value: LowerDoor
-      objectReference: {fileID: 0}
-    - target: {fileID: 215299289149619862, guid: c157a5b9395ff92428e326ad0c510722, type: 3}
-      propertyPath: OnDown.m_PersistentCalls.m_Calls.Array.data[0].m_CallState
-      value: 2
-      objectReference: {fileID: 0}
-    - target: {fileID: 215299289149619862, guid: c157a5b9395ff92428e326ad0c510722, type: 3}
-      propertyPath: OnDown.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
-      value: RaiseDoor
-      objectReference: {fileID: 0}
-    - target: {fileID: 215299289149619862, guid: c157a5b9395ff92428e326ad0c510722, type: 3}
-      propertyPath: OnUp.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
-      value: DoorController, Assembly-CSharp
-      objectReference: {fileID: 0}
-    - target: {fileID: 215299289149619862, guid: c157a5b9395ff92428e326ad0c510722, type: 3}
-      propertyPath: OnDown.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
-      value: DoorController, Assembly-CSharp
-      objectReference: {fileID: 0}
-    - target: {fileID: 215299289149619862, guid: c157a5b9395ff92428e326ad0c510722, type: 3}
-      propertyPath: OnUp.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_ObjectArgumentAssemblyTypeName
-      value: UnityEngine.Object, UnityEngine
-      objectReference: {fileID: 0}
-    - target: {fileID: 215299289149619862, guid: c157a5b9395ff92428e326ad0c510722, type: 3}
-      propertyPath: OnDown.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_ObjectArgumentAssemblyTypeName
-      value: UnityEngine.Object, UnityEngine
+      value: PushButton
       objectReference: {fileID: 0}
     - target: {fileID: 215299289149619863, guid: c157a5b9395ff92428e326ad0c510722, type: 3}
       propertyPath: m_RootOrder
@@ -3105,5 +3049,17 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 215299289384079459, guid: c157a5b9395ff92428e326ad0c510722, type: 3}
+      propertyPath: m_InteractionManager
+      value: 
+      objectReference: {fileID: 778861200}
+    - target: {fileID: 8829523558376048773, guid: c157a5b9395ff92428e326ad0c510722, type: 3}
+      propertyPath: OnUp.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 986042458}
+    - target: {fileID: 8829523558376048773, guid: c157a5b9395ff92428e326ad0c510722, type: 3}
+      propertyPath: OnDown.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 986042458}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: c157a5b9395ff92428e326ad0c510722, type: 3}
